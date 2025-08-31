@@ -10,15 +10,16 @@ app = Flask(__name__)
 API_URL = "https://api.exchangeratesapi.io/latest"
 SUPPORTED_URL = "https://api.exchangeratesapi.io/symbols"
 
-@app.route("/api/v1/currencyrate/supported", methods=["GET"])
+# @app.route("/api/v1/currencyrate/supported", methods=["GET"])
 def get_supported_currencies():
     response = requests.get(SUPPORTED_URL, params={"access_key": API_KEY})
     return response.json()
 
-def get_rate_now(symbols):
+# @app.route("/api/v1/currencyrate/now", methods=["GET"])
+def get_rate(base, symbols, type):
     if symbols:
         symbol_set = set(symbols.split(","))
-        symbol_set.add(BASE_SYMBOL)
+        symbol_set.add(base)
         final_symbols = ",".join(symbol_set)
         params = {"base": "EUR", "symbols": final_symbols, "access_key": API_KEY}
     else:
@@ -33,7 +34,7 @@ def get_rate_now(symbols):
             "rates": {}
         }
 
-    currcurr = data["rates"].get(BASE_SYMBOL)
+    currcurr = data["rates"].get(base)
     result = {
         "success": data.get("success"),
         "timestamp": data.get("timestamp"),
@@ -42,44 +43,13 @@ def get_rate_now(symbols):
     }
 
     for curr, rate in data["rates"].items():
-        if curr in [BASE_SYMBOL, "BTC"]:
+        if curr in [base, "BTC"]:
             continue
         else:
-            result["rates"][f"{curr} {BASE_AMOUNT_1}"] = f"{BASE_SYMBOL} {round(currcurr / rate * BASE_AMOUNT_1, 4)}"
-
-    return result
-
-def get_rate(symbols):
-    if symbols:
-        symbol_set = set(symbols.split(","))
-        symbol_set.add(BASE_SYMBOL_AMOUNT)
-        final_symbols = ",".join(symbol_set)
-        params = {"base": "EUR", "symbols": final_symbols, "access_key": API_KEY}
-    else:
-        params = {"access_key": API_KEY}
-    response = requests.get(API_URL, params=params)
-    data = response.json()
-
-    if not data.get("success", False) or "rates" not in data:
-        return {
-            "success": False,
-            "error": data.get("error", {"message": "Unknown error occurred"}),
-            "rates": {}
-        }
-
-    currcurr = data["rates"].get(BASE_SYMBOL_AMOUNT)
-    result = {
-        "success": data.get("success"),
-        "timestamp": data.get("timestamp"),
-        "date": data.get("date"),
-        "rates": {}
-    }
-
-    for curr, rate in data["rates"].items():
-        if curr in [BASE_SYMBOL_AMOUNT, "BTC"]:
-            continue
-        else:
-            result["rates"][curr] = round(rate / currcurr * BASE_AMOUNT_2, 4)
+            if type == "BUY":
+                result["rates"][curr] = round(currcurr / rate * amount, 4)
+            elif type == "SELL":
+                result["rates"][curr] = round(rate / currcurr * amount, 4)
 
     return result
 
@@ -108,17 +78,17 @@ st.dataframe(
 st.write("----")
 
 st.header("How much do I need to exchange?")
-BASE_SYMBOL = st.selectbox("Select Base Currency", options=total_list.keys(), index=0, key="base_currency")
+base = st.selectbox("Select Base Currency", options=total_list.keys(), index=0, key="base_currency")
 symbols_list = list(total_list.keys())
 col1, col2 = st.columns([0.5, 1])
 with col1:
-    BASE_AMOUNT_1 = st.number_input("Select Currency Amount", min_value=1, value=1, step=1, key="base_amount")
+    amount = st.number_input("Select Currency Amount", min_value=1, value=1, step=1, key="base_amount")
 with col2:
     selected_symbols = st.multiselect("Choose Target Currencies", options=symbols_list, key="multi_currency")
 
 if st.button("Get Rates", key="get_rate"):
     symbols_input = selected_symbols[0] if len(selected_symbols) == 1 else ",".join(selected_symbols)
-    rates = get_rate_now(symbols_input)
+    rates = get_rate(base, symbols_input, "BUY")
     df2 = pd.DataFrame({
         "Currency": list(map(str, rates["rates"].keys())),
         f"Rate": list(rates["rates"].values())
@@ -137,9 +107,9 @@ st.header("How much will I get if I exchange?")
 
 col1, col2 = st.columns([1, 1])
 with col1:
-    BASE_AMOUNT_2 = st.number_input("Select Currency Amount", min_value=1, value=1, step=1, key="base_amount_amount")
+    amount = st.number_input("Select Currency Amount", min_value=1, value=1, step=1, key="base_amount_amount")
 with col2:
-    BASE_SYMBOL_AMOUNT = st.selectbox("Select Base Currency", options=total_list.keys(), index=0, key="base_currency_amount")
+    base = st.selectbox("Select Base Currency", options=total_list.keys(), index=0, key="base_currency_amount")
 
 symbols_list_amount = list(total_list.keys())
 selected_symbols_amount = st.multiselect("Choose currencies", options=symbols_list_amount, key="multi_currency_amount")
@@ -148,7 +118,7 @@ selected_symbols_amount = st.multiselect("Choose currencies", options=symbols_li
 
 if st.button("Get Rates", key="get_rate_amount"):
     symbols_input_amount = selected_symbols_amount[0] if len(selected_symbols_amount) == 1 else ",".join(selected_symbols_amount)
-    rates = get_rate(symbols_input_amount)
+    rates = get_rate(base, symbols_input_amount, "SELL")
     df2 = pd.DataFrame({
         "Currency": list(map(str, rates["rates"].keys())),
         f"Rate": list(rates["rates"].values())

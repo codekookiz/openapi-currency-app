@@ -5,8 +5,6 @@ import os
 
 BASE_SYMBOL = st.secrets["CURRENCY_RATE_BASE_SYMBOL"]
 
-BASE_SYMBOL = config.get("CURRENCY_RATE_BASE_SYMBOL", "KRW")
-
 app = Flask(__name__)
 
 API_URL = "https://api.exchangerate.host/latest"

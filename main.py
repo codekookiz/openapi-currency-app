@@ -75,11 +75,11 @@ def get_rate(symbols):
         "rates": {}
     }
 
-    for (curr, val) in data["rates"].items():
+    for curr, rate in data["rates"].items():
         if curr in [BASE_SYMBOL_AMOUNT, "BTC"]:
             continue
         else:
-            result["rates"][curr] = round(val / currcurr * BASE_AMOUNT_2, 4)
+            result["rates"][curr] = round(rate / currcurr * BASE_AMOUNT_2, 4)
 
     return result
 

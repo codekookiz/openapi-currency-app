@@ -4,6 +4,7 @@ import streamlit as st
 import os
 
 BASE_SYMBOL = st.secrets["CURRENCY_RATE_BASE_SYMBOL"]
+API_KEY = st.secrets["CURRENCY_RATE_API_KEY"]
 
 app = Flask(__name__)
 
@@ -17,9 +18,9 @@ def get_rate_now():
         symbol_set = set(symbols.split(","))
         symbol_set.add(BASE_SYMBOL)
         final_symbols = ",".join(symbol_set)
-        params = {"symbols": final_symbols}
+        params = {"symbols": final_symbols, "access_key": API_KEY}
     else:
-        params = {}
+        params = {"access_key": API_KEY}
     response = requests.get(API_URL, params=params)
     data = response.json()
 
@@ -44,7 +45,17 @@ def get_rate_now():
 @app.route("/api/v1/currencyrate/supported", methods=["GET"])
 def get_supported_currencies():
     response = requests.get(SUPPORTED_URL)
-    return jsonify(response.json())
+    return response.json()
+
+
+st.title("Currency Rate API Service")
+
+curr_list = get_supported_currencies()
+
+st.table({
+    "Currency" : curr_list.symbols.keys(),
+    "Description" : curr_list.values()
+})
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8080)
+    pass

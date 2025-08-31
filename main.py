@@ -1,10 +1,9 @@
 from flask import Flask, request, jsonify
 import requests
-import yaml
+import streamlit as st
+import os
 
-# Load config
-with open("config.yml", "r") as f:
-    config = yaml.safe_load(f)
+BASE_SYMBOL = st.secrets["CURRENCY_RATE_BASE_SYMBOL"]
 
 BASE_SYMBOL = config.get("CURRENCY_RATE_BASE_SYMBOL", "KRW")
 

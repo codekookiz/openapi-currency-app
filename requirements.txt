@@ -1,3 +1,5 @@
 flask
 requests
 config
+pandas
+streamlit

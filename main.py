@@ -59,7 +59,7 @@ st.title("Currency Rate API Service")
 curr_list = get_supported_currencies()
 total_list = {}
 for k in curr_list["symbols"].keys():
-    if k == "BTC":
+    if k in "BTC":
         continue
     else:
         total_list[k] = curr_list["symbols"][k]
@@ -78,8 +78,9 @@ st.dataframe(
 st.write("----")
 
 st.header("How much do I need to exchange?")
-base = st.selectbox("Select Base Currency", options=total_list.keys(), index=0, key="base_currency")
 symbols_list = list(total_list.keys())
+krwIndex = symbols_list.index("KRW")
+base = st.selectbox("Select Base Currency", options=total_list.keys(), index=krwIndex, key="base_currency")
 col1, col2 = st.columns([0.5, 1])
 with col1:
     amount = st.number_input("Select Currency Amount", min_value=1, value=1, step=1, key="base_amount")
@@ -109,9 +110,10 @@ col1, col2 = st.columns([1, 1])
 with col1:
     amount = st.number_input("Select Currency Amount", min_value=1, value=1, step=1, key="base_amount_amount")
 with col2:
-    base = st.selectbox("Select Base Currency", options=total_list.keys(), index=0, key="base_currency_amount")
+    symbols_list_amount = list(total_list.keys())
+    usdIndex = symbols_list_amount.index("USD")
+    base = st.selectbox("Select Base Currency", options=total_list.keys(), index=usdIndex, key="base_currency_amount")
 
-symbols_list_amount = list(total_list.keys())
 selected_symbols_amount = st.multiselect("Choose currencies", options=symbols_list_amount, key="multi_currency_amount")
 
 
